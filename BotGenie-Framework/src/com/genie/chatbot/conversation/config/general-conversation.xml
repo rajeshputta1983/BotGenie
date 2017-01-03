@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<conversation-flow>
+    
+    <definitions>
+        <mapping name="YES" regex=".*(yes|yeah|ok|sure|of course).*"/>
+        <mapping name="NO" regex=".*(No|Not).*"/>
+    </definitions>
+
+	<topic pattern="(hi|hii|hello|hey) *" id="1">
+
+		<intent dialog="Hello, what is your name ?">
+			<intent pattern="* name is {username=*}" jumpToTopic="1-1" dialog="Welcome ${username} !!">
+				<learning>
+					<learn fact="user {name:'${username}'}"/>
+					<learn fact="user {name:'${username}'} || has || name"/>
+					<learn fact="user {name:'${username}'} || has || friend {name:'Ravi'} || has || friend {name:'Prasad'} -> {contact:'999999999', age:32}"/>
+				</learning>
+			</intent>
+			
+			<intent pattern="* am {username=*}"  jumpToTopic="1-1" dialog="Welcome ${username} !!">
+				<learning>
+					<learn fact="user {name:'${username}'}"/>
+					<learn fact="user {name:'${username}'} || has || name"/>
+					<learn fact="user {name:'${username}'} || has || friend {name:'Ravi'} || has || friend {name:'Prasad'} -> {contact:'999999999', age:32}"/>
+				</learning>
+			</intent>
+		</intent>
+	</topic>
+
+	<topic id="1-1">
+	  <if expr="${fact#user {name:'${username}'} -> contact} == null">	    
+	    <intent dialog="what is your contact number ?">
+			<intent pattern="* why *" dialog="your contact number helps us in reaching out to you for better support. Please share number">
+				<intent pattern="{contactnumber=+}" jumpToTopic="1-2" dialog="Thanks !!">
+					<learning>
+						<learn fact="user {name:'${username}'} -> {contact:'${contactnumber}'}"/>
+					</learning>
+				</intent>    
+			</intent>
+		</intent>
+	 </if>
+	 <else>
+	     <intent jumpToTopic="1-2"/>
+	 </else>
+	</topic>
+		
+	<topic id="1-2">
+	    <intent dialog="How are you ?">
+			<intent pattern="* not * (good|great) *" dialog="Hmm !! How can i help you today ?">
+				<intent pattern="* not * required" dialog="that's ok !!"/>    
+			</intent>
+			    
+			<intent pattern="* (good|great) *" dialog="Great !! How can i help you today ?">
+			    <intent pattern="* what * about * you *" jumpToTopic="201" dialog="Of course, i am doing good. Thanks !!"/>
+				<intent pattern="* (nothing_much|not_required) *" jumpToTopic="201" dialog="That's OK !!"/>
+			</intent>
+			
+			<intent pattern="* (bad|worse) *" dialog="OK !! How can i help you today ?"/>
+		</intent>
+	</topic>
+	
+	<topic pattern="* note * down * Prasad * contact *" id="2-0">
+		<intent dialog="${fact#user {name:'${username}'} || has || friend {name:'Ravi'} || has || friend {name:'Prasad'} -> contact}, not sure why people want to test my memory !!"/>
+	</topic>
+	
+	<topic pattern="* share * my * contact *" id="2-0-0">
+		<intent dialog="Sure, ${fact#user {name:'${username}'} -> contact} is your contact number as per records !!"/>
+	</topic>
+	
+	<topic pattern="* who * are * you *" id="2">
+		<intent dialog="I am John, am here to support you !! Want to proceed further ?">
+			<intent pattern="* (no|not_interested) *" dialog="OK !! of course, i cannot force you !!">
+				<intent pattern="* (good|great) *" dialog="Cool !!"/>
+			</intent>    
+			<intent pattern="* (yes|yeah|ok|sure) *" dialog="Thanks !! How can i help you today ?"/>
+		</intent>    
+	</topic>
+
+	<topic pattern="* how * are * you *" id="3">
+		<intent dialog="I am doing good !! what about you ?">
+			<intent pattern="* not * doing * (good|great) *" dialog="Hmm !! How can i help you today ?"/>		
+			<intent pattern="* (good|great) *" dialog="Great !! How can i help you today ?"/>
+			<intent pattern="* (bad|worse) *" dialog="Hmm !! How can i help you today ?"/>
+		</intent>
+	</topic>
+	
+	<topic pattern="* where * you * (stay|live) *" id="4">
+		<intent dialog="i am everywhere !!"/>
+	</topic>
+	
+	<topic pattern="* lol *" id="5">
+		<intent dialog="cute laugh!!"/>
+	</topic>
+	
+	<topic pattern="* why?" id="6">
+		<intent dialog="why not?"/>
+	</topic>
+	
+	<topic pattern="* what else?" id="6-1">
+		<intent dialog="tell me what else ?"/>
+	</topic>
+	
+	<topic pattern="* nothing *" id="6-2">
+		<intent dialog="OK !!"/>
+	</topic>
+	
+	<topic pattern="* anything else?" id="6-3">
+		<intent dialog="tell me what else ?"/>
+	</topic>
+	
+	<topic pattern="* excellent *" id="6-4">
+		<intent dialog="Thank You !!"/>
+	</topic>
+		
+	<topic pattern="* of\s+course *" id="7">
+		<intent dialog="That's OK !!"/>
+	</topic>
+
+	<topic pattern="* no * thanks *" id="8">
+		<intent dialog="OK !!"/>
+	</topic>
+				
+	<topic pattern="* (cu|see\s+you) *" id="9">
+		<intent dialog="sure, see you soon !!"/>
+	</topic>
+
+	<topic pattern="* non\s+sense *" id="10">
+		<intent dialog="i am not sure of what may make sense to you !!"/>
+	</topic>
+	
+	<topic pattern="* how * you * help *" id="10-1">
+		<intent dialog="i have enough knowledge on stop payments, can try to help you on that !!"/>
+	</topic>
+		
+	<topic pattern="* you * (eat|eating)* {food=+}" id="11">
+		<intent dialog="i don't eat {food} !! what about you ?">
+		    <intent pattern="* don't * (eat|eating|do) *" dialog="why don't you eat ${food}?">
+		        <intent pattern="+" dialog="OK !!"/>	
+		     </intent>   
+		    <intent pattern="* i * (eat|eating|do) *" dialog="Good that atleast you eat ${food} !!"/>
+		    <intent pattern="+" dialog="what food do you prefer then ?">
+		        <intent pattern="+" dialog="OK Good !!"/>
+		    </intent>    
+		</intent>
+	</topic>
+
+	<topic pattern="* (thanks|thank_you) *" id="12">
+		<intent dialog="cool. any other help needed ?"/>
+	</topic>
+	
+	<topic pattern="* great" id="12-1">
+		<intent dialog="cool. any other help needed ?"/>
+	</topic>
+
+	<topic pattern="OK" id="12-2">
+		<intent dialog="OK !!"/>
+	</topic>
+		
+	<topic pattern="what about you" id="13">
+		<intent dialog="what is that about ?"/>
+	</topic>	
+
+	<topic pattern="* you like *" id="14">
+		<intent dialog="I love watching movies. You ?">
+		    <intent pattern="* (like|love) {likevar=*}" dialog="Good to know that you like ${likevar} !!"/>
+		</intent>
+	</topic>	
+				
+	<topic pattern="* bye *" id="100">
+		<intent dialog="Bye!!"/>
+	</topic>
+	
+	<topic pattern="all {role=*2} are smart" id="15-2">
+		<intent dialog="OK !!">
+			<learning>
+				<learn fact="Role {name:'${role}'} || is || Smart"/>
+			</learning>
+		</intent>
+	</topic>			
+
+	<topic pattern="{personName=*2} is {role=*2}" id="16-1">
+		<intent dialog="OK !!">
+			<learning>
+				<learn fact="Person {name:'${personName}'}"/>
+				<learn fact="Person {name:'${personName}'} || is || Role {name:'${role}s'}"/>
+			</learning>
+		</intent>
+	</topic>			
+	
+	<topic pattern="is {personName=*2} smart" id="17-1">
+		<if expr="${fact#Person {name:'${personName}'} || is || Role {name:'${role}s'}} != null">	    
+			<intent dialog="Of course, ${personName} is smart"/>
+		</if>
+		<else>
+			<intent dialog="No !!"/>
+		</else>
+	</topic>			
+	
+	
+	<!-- Question Set -->
+	<topic question="what do you like?" id="200">
+		<intent pattern="* like {likevar=*}" dialog="Good to know that you like ${likevar} !!">
+		    <intent pattern="* you * like *" dialog="I love watching movies"/>
+		    <intent pattern="*" dialog="I too like ${likevar}"/>
+		</intent>
+	</topic>
+
+	<topic question="where do you stay?" id="201">
+		<intent pattern="* at {location=*}" dialog="is ${location} good to stay ?">
+			<intent pattern="* (yes|yeah) *" dialog="cool"/>
+			<intent pattern="* (no|not) *" dialog="why don't you try finding better location then ?"/>
+			<intent pattern="+" jumpToTopic="200" dialog="OK !!"/>
+		</intent>    
+	</topic>
+				
+</conversation-flow>

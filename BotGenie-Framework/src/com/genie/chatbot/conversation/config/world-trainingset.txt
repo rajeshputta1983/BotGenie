@@ -1,0 +1,23 @@
+START: Person {name:'${0}'} || ceo || Organization {name:'${1}'}
+
+Andy_Grove 	Intel
+Bill_Gates 	Microsoft
+Jeff_Bezos 	Amazon 
+Larry_Ellison Oracle
+Steve_Case 	AOL
+Steve_Jobs 	Apple_Computers
+Ted_Turner 	CNN
+
+
+START: Person {name:'${0}'} || career || JobType {name:'${1}'}
+
+Edward_Roberts 	electrical_engineer
+Steve_Wozniak 	computer_scientist 
+Roger_Penrose 	astrophysicist 
+Edward_Wilson 	biologist 
+Stanley_Miller 	biochemist 
+Richard_Feynman physicist 
+Frederick_Sanger biochemist 
+Francis_Crick 	molecular_biologist 
+Wernher_von_Braun rocket_scientist 
+William_Shockley physicist 
