@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<conversation-flow>
+    
+	<topic pattern="* who is the ceo of {orgName=*}" id="who-1">
+		<if expr="${fact#Organization {name:'${orgName}'} || ceo || Person -> name} != null">	    
+			<intent dialog="${fact#Organization {name:'${orgName}'} || ceo || Person -> name}"/>
+		</if>
+		<else>
+			<intent dialog="Sorry, i don't know who is that !!"/>
+		</else>
+	</topic>
+	
+	<topic pattern="* who is {personName=*}" id="who-2">
+		<if expr="${fact#Person {name:'${personName}'} || career || JobType -> name} != null">	    
+			<intent dialog="${fact#Person {name:'${personName}'} || career || JobType -> name}"/>
+		</if>
+		<else>
+			<intent dialog="Sorry, i don't know who is that !!"/>
+		</else>
+	</topic>
+	
+</conversation-flow>

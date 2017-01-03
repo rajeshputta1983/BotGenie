@@ -1,0 +1,18 @@
+
+BotGenie-Framework Solr Collections
+----------------------------------
+
+trained_questions
+-----------------
+
+{
+	"id":"100",
+	"question": "how can i stop my Check",
+	"topicId": "1000",
+	"helpContentId":""
+}
+
+
+
+
+
