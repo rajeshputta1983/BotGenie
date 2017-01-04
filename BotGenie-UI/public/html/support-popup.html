@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+  <head>
+    <title>ADP Live</title>
+    <style>
+	  
+	  .logo {padding-bottom:30px;}
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; padding-right:0px; width: 80%; margin-right: .5%; }
+      form button { background: purple; color: #fff; border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; width: 100%; height: 200px; overflow: auto}
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(even) { background: #eee; }
+	  .rightAlign {text-align:right}
+	  
+	  table tr td {border:1px solid #000;}
+	  
+    </style>
+	
+	<script src="/js/socket.io.min.js"></script>	
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>	
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">	
+	
+  </head>
+  <body>
+	
+	<img src="img/logo_ADP_red.png" class="logo"/>
+
+	<a href="#" id="contextLink">Click Here to See User Context</a>
+	<i class="fa fa-envelope" style="font-size:24px" id="mailLink"></i>
+	
+	<div id="content">
+		<div id="userContextDiv">
+		</div>
+		
+		<ul id="messages"></ul>
+	</div>
+
+	<span id="notifyMessage">
+	</span>
+	
+	<form autocomplete="off">
+	  <input id="message" placeholder="Type a message here..."/><button>Send</button>
+	</form>
+	
+	
+	<script>
+	  var socket = io();
+	  
+	 function padTime(i) {
+		if (i < 10) {
+			i = "0" + i;
+		}
+	
+		return i;
+	 }
+
+	 function currentTime() {
+		  var date = new Date();
+		  var hours = date.getHours();
+		  var minutes = date.getMinutes();
+		  var seconds = date.getSeconds();
+		  var ampm = hours >= 12 ? 'pm' : 'am';
+		  hours = hours % 12;
+		  hours = hours ? hours : 12;
+		  minutes = minutes < 10 ? '0'+minutes : minutes;
+		  seconds = seconds < 10 ? '0'+seconds : seconds;
+		  var strTime = '[' + hours + ':' + minutes + ':' + seconds + ' ' + ampm + ']';
+		  return strTime;
+	 }
+	  
+	  $( document ).ready(function() {
+
+		  setTimeout(function() {
+			try{
+				var context=window.wfnContext;
+				
+				if(!context || !context.pagesLoaded)
+					return;
+				
+				var contextTable="";
+
+				if(context.userData) {
+					var temp=context.userData;
+					var parts=temp.split(":");
+					
+					if(parts)
+					{
+						var keyInfo=parts.slice(1, parts.length-1);
+						
+						contextTable+="<p>Client/User Details</p>";
+						contextTable+="<table style='padding-bottom:10px; '>";
+						
+						for(var index in keyInfo)
+						{
+							var oneKey=keyInfo[index];
+							
+							oneKey=oneKey.split("=");
+							
+							contextTable+="<tr><td style='font-weight:bold'>"+oneKey[0]+"</td><td>"+oneKey[1]+"</td></tr>";
+						}
+						
+						contextTable+="</table>";
+						
+						console.error("user data in context..."+contextTable);
+					}
+				}
+				
+				contextTable+="<p>User Page Navigation Details</p>";
+				
+				for(var pageIndex in context.pagesLoaded)
+				{
+					var pageDetails=context.pagesLoaded[pageIndex];
+					
+					contextTable+="<table style='padding-bottom:10px;'><tr><td style='font-weight:bold'>Page Title</td><td>"+pageDetails.title+"</td></tr>";
+					contextTable+="<tr><td style='font-weight:bold'>Page URL</td><td>"+pageDetails.href+"</td></tr>";
+					
+					if(pageDetails.flowRequests && pageDetails.flowRequests.length>0)
+					{
+						contextTable+="<tr><td style='font-weight:bold' rowspan="+(pageDetails.flowRequests.length+1)+">Flow Requests</td><td></td></tr>";
+						
+						for(var index in pageDetails.flowRequests){
+							contextTable+="<tr><td>"+pageDetails.flowRequests[index]+"</td></tr>";
+						}
+					}
+
+					contextTable+='</table>';			
+				}
+			
+				document.getElementById("userContextDiv").innerHTML=contextTable;
+				document.getElementById("userContextDiv").style.display='none';
+				
+				return false;
+			}catch(e){
+				console.error(e);
+			}
+				
+		  }, 50);
+	  
+		  $("#contextLink").click(function() {
+		  
+				window.resizeTo(700, 500);
+				
+				if(document.getElementById("userContextDiv").style.display=='inline')
+				{
+					document.getElementById("userContextDiv").style.display='none';
+					$("#contextLink").html('Click Here to See User Context');
+				}
+				else
+				{
+					document.getElementById("userContextDiv").style.display='inline';
+					$("#contextLink").html('Click Here to Hide User Context');
+				}
+		  });
+
+		  $("#mailLink").click(function() {
+				
+				var content=document.getElementById("content").innerHTML;
+				
+				socket.emit('email transcript', {"room":window.room, "email":window.email, "msg":content});
+		  });
+	  
+		  socket.emit('support channel established', {"room":window.room, "email":window.email});
+
+		  if(window.msg)
+		  {
+				$('#messages').append($('<li>').text(currentTime()));
+				$('#messages').append($('<li>').text(window.msg));	
+		  }
+	  
+		  $('form').submit(function(event){
+				event.preventDefault();
+				
+				var msg=$('#message').val();
+				
+				if(msg==null || msg=="" || msg.trim()=="")
+				  return false;
+				
+				$('#messages').append($('<li class="rightAlign">').text(currentTime()));
+				$('#messages').append($('<li class="rightAlign">').text(msg));
+
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+
+				socket.emit('support chat request', {"msg":msg, "room":window.room});
+				$('#message').val('');
+				return false;
+		  });
+		  
+		  $("#message").keyup(function(){
+				socket.emit('notification request', {"room":window.room});
+		  });	
+		  
+		  socket.on('not available', function(response){
+				$('#messages').append($('<li style="background-color:cyan;color:red;">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+		  
+		  socket.on('support person joined', function(response){
+				$('#messages').append($('<li style="background-color:cyan;color:red;">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+		  
+		  socket.on('chat reply', function(response){
+				$('#messages').append($('<li>').text(currentTime()));
+				$('#messages').append($('<li>').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+		  
+		  socket.on('notify', function(response){
+			  $("#notifyMessage").html('user is typing...');
+			  setTimeout(function(){
+				$("#notifyMessage").html('');
+			  }, 500);
+		  });
+		  
+		  
+	  });
+	</script>
+	</body>
+</html>

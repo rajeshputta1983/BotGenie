@@ -1,0 +1,23 @@
+{
+  "name": "chat4support",
+  "version": "1.0.0",
+  "description": "chat application for any support needs",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.13.4",
+    "hapi": "^13.4.1",
+    "inert": "^4.0.0",
+    "node-uuid": "^1.4.7",
+    "socket.io": "^1.4.6",
+	"neo4j-driver": "1.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chat"
+  ],
+  "author": "Rajesh Putta",
+  "license": "ISC"
+}

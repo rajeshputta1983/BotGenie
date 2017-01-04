@@ -1,0 +1,17 @@
+<html>
+	<head>
+		<script>
+			function adjustImage(){
+				var height=window.innerHeight;
+				var width=window.innerWidth;
+				
+				document.getElementById("imageId").style.width=width+"px";
+				document.getElementById("imageId").style.height=height+"px";
+			}
+		</script>
+	</head>
+
+	<body onLoad="adjustImage()">
+		<img id="imageId" src="/img/404.jpg"/>
+	</body>
+</html>	

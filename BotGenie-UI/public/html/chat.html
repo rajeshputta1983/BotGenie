@@ -1,0 +1,157 @@
+	<div style="font-weight:bold; position:fixed; right:13px; top:10px; z-index:500" onClick="window.close();">X</div>
+	<div style="position:fixed; top:0px; z-index:500; padding-bottom:15px;"><img src="img/adplogo.jpg" style="width: 100%"/></div>
+	<!-- <img src="http://www.adp.com/-/media/USA-2015/Thin-Heroes/bkgd_hero_contact-support-search.ashx" class="logo"/> -->
+	<div id="messages" class="chat" style="padding-top: 40px; padding-bottom: 40px; ">
+	
+		
+	</div>
+
+	<span id="notifyMessage">
+	</span>
+    <form autocomplete="off">
+      <input id="message" placeholder="Type a message here..." style="border:1px solid #ccc;"/><button class="ng-binding btn btn-primary">Send</button>
+    </form>
+
+	<script>
+	  var socket = io();
+	  var user='. I am Genie, here to help you';
+	  var conversationGuid=null;
+	  var myroom=null;
+	  var question=null;
+	  var topic=null;
+	  var wfnChatContext=null;
+	  var timeoutFunction;
+	  
+	 function currentTime() {
+		  var date = new Date();
+		  var hours = date.getHours();
+		  var minutes = date.getMinutes();
+		  var ampm = hours >= 12 ? 'pm' : 'am';
+		  hours = (hours > 12 ? hours - 12 : hours);
+		  minutes = minutes < 10 ? '0'+minutes : minutes;
+		  var strTime = hours + ':' + minutes + ' ' + ampm;
+		  return strTime;
+	 }
+	 
+	function checkUserSession() {
+		socket.emit('chat request', {"conversationGuid":conversationGuid ,"msg":"thanks", "user":user, "room":myroom, "topic":"greeting", "context":wfnChatContext?wfnChatContext:null});
+	}
+	 			
+	  $( document ).ready(function() {
+	  
+		  wfnChatContext=localStorage.getItem("wfnChatContext");	
+		  
+		  console.log("wfn context fetched in popup..."+wfnChatContext);		  
+	  
+		  $('form').submit(function(event){
+				event.preventDefault();
+				
+				var msg=$('#message').val();
+				
+				if(msg==null || msg=="" || msg.trim()=="")
+				  return false;
+				
+				$('#messages').append($('<div style="display: table; float :right; clear:both;">').append($('<div class="circle user-image" style="background-color: #89E3F9; float :right">').add(
+							$('<div class="bubble you">').text(msg)
+							.append($('<li style="text-align:right">').text(currentTime())) )));
+
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				$("html,body").animate({ scrollTop: height }, "slow");
+				
+				var date = new Date();
+				var hrs = date.getHours();
+				var mins = date.getMinutes();
+				var ampm = hrs >= 12 ? 'pm' : 'am';
+
+				socket.emit('chat request', {"conversationGuid":conversationGuid ,"datestr":date.toDateString() , "hour":hrs, "mins":mins, "ampm":ampm, "msg":msg, "user":user, "room":myroom, "topic":topic, "equestion":question, "context":wfnChatContext?wfnChatContext:null});
+				
+				question=msg;
+				
+				$('#message').val('');
+				/** clearTimeout(timeoutFunction); 
+				timeoutFunction = setTimeout(checkUserSession, 2 * 60 * 1000); **/
+				
+				return false;
+		  });
+		  
+		  $("#message").keyup(function(){
+				/** socket.emit('notification request', {"room":myroom}); **/
+		  });	
+		  
+  		  socket.on('greeting', function(response){
+		  
+				myroom = user;
+				var greeting;
+				var date = new Date();
+				var hrs = date.getHours();
+				var mins = date.getMinutes();
+				var ampm = hrs >= 12 ? 'pm' : 'am';
+				if ( ampm=="am" ){
+					greeting = "Good Morning "+user;
+				}else if ( ampm=="pm" ){
+					if ( hrs > 15 )
+						greeting = "Good Evening "+user;
+					else	
+						greeting = "Good Afternoon "+user;
+				}
+
+				$('#messages').append($('<span style="display: table; float: left; clear:both;">').append($('<div class="circle ca-image" style="float :left">').add(
+				 			$('<div class="bubble me">').text(greeting)
+							.append($('<li style="text-align:right">').text(currentTime())) )));
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				$("html,body").animate({ scrollTop: height }, "slow");
+				socket.emit('chat request', {"conversationGuid":conversationGuid ,"datestr":date.toDateString() , "hour":hrs, "mins":mins, "ampm":ampm, "user":user, "context":wfnChatContext?wfnChatContext:null});
+		  });
+
+		  socket.on('not available', function(response){
+				$('#messages').append($('<div class="bubble me">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+			$("html,body").animate({ scrollTop: height }, "slow");
+		  });
+		  
+		  socket.on('support person joined', function(response){
+				$('#messages').append($('<div style="display: table; float: left; clear:both;">').append($('<div class="circle ca-image" style="float :left">').add(
+							$('<div class="bubble me">').text(response.msg)
+							.append($('<li style="text-align:right">').text(currentTime())) )));
+				
+				myroom=response.room;
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+			$("html,body").animate({ scrollTop: height }, "slow");
+		  });
+		  
+		  socket.on('chat reply', function(response){
+				$('#messages').append($('<span style="display: table; float: left; clear:both;">').append($('<div class="circle ca-image" style="float :left">').add(
+				 			$('<div class="bubble me">').text(response.msg)
+							.append($('<li style="text-align:right">').text(currentTime())) )));
+				var messagesEle = $('#messages');				
+				myroom=response.room;
+				topic=response.topic;
+				conversationGuid=response.conversationGuid;
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				$("html,body").animate({ scrollTop: height }, "slow");
+		  });
+
+		  socket.on('support person exit', function(response){
+				$('#messages').append($('<div class="bubble me">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+			$("html,body").animate({ scrollTop: height }, "slow");
+		  });
+
+		  socket.on('notify', function(response){
+			  $("#notifyMessage").html('user is typing...');
+			  setTimeout(function(){
+				$("#notifyMessage").html('');
+			  }, 500);
+		  });
+		  
+	  });
+	</script>

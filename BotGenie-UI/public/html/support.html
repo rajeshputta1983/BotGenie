@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ADP Live</title>
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+      .logo {padding-bottom:30px;}
+    </style>
+	<script src="/js/socket.io.min.js"></script>	
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js">
+    </script>
+</head>
+<body>
+    <img class="logo" src="img/logo_ADP_red.png">
+    <div id="wrapper">
+		<div id="supportLandingMessage"></div>
+
+		<div class="mail-text">
+            ADP Support Chat
+        </div>
+        <div class="forms">
+            <form action="" id="register" method="post" name="register" autocomplete="off">
+                <input id="name" name="name" onclick=
+                "border: 1px solid #30a8da;" placeholder=
+                "Enter your full name..." size="30" type="text"><br>
+                
+				<input id="email" name="email" onclick=
+                "border: 1px solid #30a8da;" placeholder=
+                "Enter your email address..." size="30" type="text"> <br/>
+			
+				<button class="create-acc">Login To Support</button> 
+			
+            </form>
+			
+        </div>
+		<span id= "responseMessage"></span>
+    </div>
+    <script>
+      var socket = io();
+	  
+	  var emailRef=null;
+	  
+	  var popupRefArray=[];
+	  
+	  $(window).bind('beforeunload', function(){
+              socket.emit('bye', {
+                  "email": emailRef
+              });
+			  
+			  for(var popupIndex in popupRefArray)
+			  {
+				 var popup=popupRefArray[popupIndex];
+				 
+				 if(popup)
+					popup.close();
+			  }
+	  });	  
+
+      $(document).ready(function() {
+
+          $('#register').submit(function() {
+
+              var name = $('#name').val();
+              var email = $('#email').val();
+
+              if (name === null || name == "" || name.trim() == "" || email === null || email == "" || email.trim() == "")
+                  return false;
+
+              socket.emit('register support person', {
+                  "name": name,
+                  "email": email
+              });
+			  
+			  emailRef=email;	
+
+              return false;
+          });
+
+
+          socket.on('check join', function(response) {
+              var popup = window.open('/supportChat', 'Chat-' +
+                  new Date().getTime(),
+                  'directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=400,height=350'
+              );
+              popup.room = response.room;
+              popup.email = response.email;
+			  popup.msg = response.msg;
+			  popup.wfnContext = response.context?JSON.parse(response.context):null;
+			  
+			  popupRefArray.push(popup);
+          });
+
+          socket.on('user joined', function(response) {
+              $('#messages').append($(
+                  '<li style="background-color:cyan;color:red;">'
+              ).text(response.msg));
+
+              var messagesEle = $('#messages');
+              var height = messagesEle[0].scrollHeight;
+              messagesEle.scrollTop(height);
+          });
+
+          socket.on("register failure", function(response) {
+              $("#responseMessage").html(response.msg);
+          });
+
+          socket.on("register success", function() {
+              $("#supportLandingMessage").html(
+                  "You are in to ADP Live Support Channel....Will let you know if somebody need support..."
+              );
+              $('#register').hide();
+			  
+			  $('.mail-text').hide();			  
+			  $('.forms').hide();
+          });
+		  
+	  
+
+
+      });
+    </script>
+    <div class="footer">
+        &copy; ADP Pvt Ltd
+    </div>
+</body>
+</html>

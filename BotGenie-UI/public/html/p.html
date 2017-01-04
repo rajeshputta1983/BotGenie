@@ -1,0 +1,120 @@
+	<img src="img/adplogo.jpg" style="width: 100%"/>
+	<!-- <img src="http://www.adp.com/-/media/USA-2015/Thin-Heroes/bkgd_hero_contact-support-search.ashx" class="logo"/> -->
+	<ul id="messages">
+	</ul>
+
+	<span id="notifyMessage">
+	</span>
+    <form autocomplete="off">
+      <input id="message" placeholder="Type a message here..."/><button>Send</button>
+    </form>
+
+	<script>
+	  var socket = io();
+	  
+	  var myroom=null;
+	  var wfnChatContext=null;
+	  
+	 function currentTime() {
+		  var date = new Date();
+		  var hours = date.getHours();
+		  var minutes = date.getMinutes();
+		  var seconds = date.getSeconds();
+		  var ampm = hours >= 12 ? 'pm' : 'am';
+		  hours = (hours > 12 ? hours - 12 : hours);
+		  minutes = minutes < 10 ? '0'+minutes : minutes;
+		  seconds = seconds < 10 ? '0'+seconds : seconds;
+		  var strTime = hours + ':' + minutes + ':' + seconds + ' ' + ampm;
+		  return strTime;
+	 }
+	  
+	  
+	  $( document ).ready(function() {
+	  
+		  wfnChatContext=localStorage.getItem("wfnChatContext");	
+		  
+		  console.log("wfn context fetched in popup..."+wfnChatContext);		  
+	  
+		  $('form').submit(function(event){
+				event.preventDefault();
+				
+				var msg=$('#message').val();
+				
+				if(msg==null || msg=="" || msg.trim()=="")
+				  return false;
+				
+				$('#messages').append(
+					$('<div class="bubbleu rightAlign">').text(currentTime()).append($('<li style="text-align:left">').text(msg)));
+
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+				
+				var date = new Date();
+				var hrs = date.getHours();
+				var mins = date.getMinutes();
+				var ampm = hrs >= 12 ? 'pm' : 'am';
+				socket.emit('chat request', {"datestr":date.toDateString() , "hour":hrs, "mins":mins, "ampm":ampm, "msg":msg, "room":myroom, "context":wfnChatContext?wfnChatContext:null});
+				
+				$('#message').val('');
+				return false;
+		  });
+		  
+		  $("#message").keyup(function(){
+				/** socket.emit('notification request', {"room":myroom}); **/
+		  });	
+		  
+  		  socket.on('greeting', function(response){
+			$('#messages').append(
+					$('<li class="bubbles">').text(response.msg)
+					.append($('<li style="text-align:right">').text(currentTime())));
+					var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+
+		  socket.on('not available', function(response){
+				$('#messages').append($('<li class="bubblesw">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+		  
+		  socket.on('support person joined', function(response){
+				$('#messages').append($('<li class="bubbles">').text(response.msg).append($('<li style="text-align:right">').text(currentTime()))); 
+				
+				myroom=response.room;
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+		  
+		  socket.on('chat reply', function(response){
+				$('#messages').append($('<li class="bubbles">').text(response.msg).append($('<li style="text-align:right">').text(currentTime()))); 
+				
+				myroom=response.room;
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+
+		  socket.on('support person exit', function(response){
+				$('#messages').append($('<li class="bubblesw">').text(response.msg));
+				
+				var messagesEle = $('#messages');
+				var height = messagesEle[0].scrollHeight;
+				messagesEle.scrollTop(height);
+		  });
+
+		  socket.on('notify', function(response){
+			  $("#notifyMessage").html('user is typing...');
+			  setTimeout(function(){
+				$("#notifyMessage").html('');
+			  }, 500);
+		  });
+		  
+	  });
+	</script>
